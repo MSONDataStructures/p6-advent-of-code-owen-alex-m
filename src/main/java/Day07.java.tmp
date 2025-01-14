@@ -24,32 +24,45 @@ public class Day07 {
 		return 0;
 	}
 
-	public static long targetsHit;
+	public static AtomicLong targetsHit;
 
 	public static long part1R(In in) {
-		targetsHit = 0; // reset because this is a static var
+		targetsHit = new AtomicLong(0);
+		ArrayList<Thread> threads = new ArrayList<>();
+
 		while (in.hasNextLine()) {
 			String[] args = in.readLine().split("[: ]+"); //  regex 
 
-			long target = Long.valueOf(args[0]);
-			int[] nums = new int[args.length - 1];
+			threads.add(new Thread() {
+				public void run() {
 
-			for (int i = 0; i < nums.length; i++) {
-				nums[i] = Integer.valueOf(args[1 + i]);
-			}
+					long target = Long.valueOf(args[0]);
+					int[] nums = new int[args.length - 1];
 
-			targetsHit += (checkIfMakesTarget(target, nums, 0, 0)) ? target : 0;
+					for (int i = 0; i < nums.length; i++) {
+						nums[i] = Integer.valueOf(args[1 + i]);
+					}
+
+					targetsHit.addAndGet((checkIfMakesTarget(target, nums, 0, 0)) ? target : 0);
+				}
+			});
+
+			threads.getLast().start();
 		}
 
-		return targetsHit;
-
+		for (Thread thread : threads) {
+			try {
+				thread.join();
+			} catch (Exception e) {
+				// trust me bro, it wont fail
+			}
+		}
+		return targetsHit.get();
 	}
 
 	public static boolean checkIfMakesTarget(Long target, int[] numbers, int index, long total) {
 		if (index == numbers.length) {
 			return target == total;
-		} else if (total > target) { // no need to keep checking if we are already high enough
-			return false;
 		} else {
 			return
 				checkIfMakesTarget(target, numbers, index + 1, total + numbers[index]) ||
