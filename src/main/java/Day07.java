@@ -13,19 +13,79 @@ public class Day07 {
         //System.out.print(part2(in));
     }
 
-    public static long part1I(In in) {
+   public static long part1I(In in) {
+        long total = 0;
+
         while (in.hasNextLine()) {
-            String lineIn = in.readLine();
-            // TODO: the magic happens here...iteratively
+            String line = in.readLine();
+            String[] parts = line.split(": ");
+
+            long target = Long.parseLong(parts[0]);
+            String[] numStrings = parts[1].split(" ");
+
+            long[] numbers = new long[numStrings.length];
+            for (int i = 0; i < numStrings.length; i++) {
+                numbers[i] = Long.parseLong(numStrings[i]);
+            }
+
+            if (isParseable(numbers, target)) {
+                total += target;
+            }
         }
-        return 0;
+        return total;
     }
 
-    public static long part1R(In in) {
-        while (in.hasNextLine()) {
-            String lineIn = in.readLine();
-            // TODO: the magic happens here...recursively
+    private static boolean isParseable(long[] numbers, long target) {
+        int n = numbers.length;
+        int combinations = (int) Math.pow(2, n - 1); 
+
+        for (int i = 0; i < combinations; i++) {
+            long result = numbers[0];
+            for (int j = 0; j < n - 1; j++) {
+               
+                if ((i & (1 << j)) == 0) {
+                    result += numbers[j + 1];
+                } else {
+                    result *= numbers[j + 1];
+                }
+            }
+            if (result == target) {
+                return true; 
+            }
         }
-        return 0;
+        return false; 
     }
+
+	public static long targetsHit;
+
+	public static long part1R(In in) {
+		targetsHit = 0; // reset because this is a static var
+		while (in.hasNextLine()) {
+			String[] args = in.readLine().split("[: ]+"); //  regex 
+
+			long target = Long.valueOf(args[0]);
+			int[] nums = new int[args.length - 1];
+
+			for (int i = 0; i < nums.length; i++) {
+				nums[i] = Integer.valueOf(args[1 + i]);
+			}
+
+			targetsHit += (checkIfMakesTarget(target, nums, 0, 0)) ? target : 0;
+		}
+
+		return targetsHit;
+
+	}
+
+	public static boolean checkIfMakesTarget(Long target, int[] numbers, int index, long total) {
+		if (index == numbers.length) {
+			return target == total;
+		} else if (total > target) { // no need to keep checking if we are already high enough
+			return false;
+		} else {
+			return
+				checkIfMakesTarget(target, numbers, index + 1, total + numbers[index]) ||
+				checkIfMakesTarget(target, numbers, index + 1, total * numbers[index]);
+		}
+	}
 }
